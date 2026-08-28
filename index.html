@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="theme-color" content="#e8524f">
+  <meta name="description" content="懂爱好者的个人记账系统">
+  <title>萌账 Moekan · 个人记账</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-inner">
+      <div class="brand">
+        <span class="brand-mark">帳</span>
+        <span class="brand-name">萌账</span>
+      </div>
+      <div class="month-nav" id="month-nav">
+        <button class="nav-btn" id="prev-month" aria-label="上月">‹</button>
+        <span class="month-label" id="month-label">2026-08</span>
+        <button class="nav-btn" id="next-month" aria-label="下月">›</button>
+      </div>
+    </div>
+  </header>
+
+  <main class="app-main">
+    <!-- ═══ 视图：记账（首页） ═══ -->
+    <section class="view" id="view-home" data-view="home">
+      <div class="summary-card">
+        <div class="summary-row">
+          <div class="summary-item expense">
+            <div class="summary-label">本月支出</div>
+            <div class="summary-value" id="sum-expense">¥0.00</div>
+          </div>
+          <div class="summary-divider"></div>
+          <div class="summary-item income">
+            <div class="summary-label">本月收入</div>
+            <div class="summary-value" id="sum-income">¥0.00</div>
+          </div>
+        </div>
+        <div class="summary-sub" id="sum-net-wrap">结余 <span id="sum-net">¥0.00</span></div>
+      </div>
+
+      <!-- 快捷记账 -->
+      <form class="quick-add" id="quick-add">
+        <div class="type-tabs" id="type-tabs">
+          <button type="button" class="type-tab active" data-type="expense">支出</button>
+          <button type="button" class="type-tab" data-type="income">收入</button>
+          <button type="button" class="type-tab" data-type="transfer">转账</button>
+        </div>
+
+        <div class="amount-row">
+          <span class="currency-sel">
+            <select id="tx-currency" class="currency-select"></select>
+          </span>
+          <input type="text" id="tx-amount" class="amount-input" inputmode="decimal"
+                 placeholder="0.00" autocomplete="off" required>
+          <span class="cny-hint" id="cny-hint"></span>
+        </div>
+
+        <div class="field-row">
+          <select id="tx-account" class="field-select"></select>
+          <select id="tx-to-account" class="field-select" style="display:none"></select>
+          <input type="date" id="tx-date" class="field-date">
+        </div>
+
+        <div class="category-chips" id="category-chips"></div>
+
+        <div class="field-row">
+          <input type="text" id="tx-note" class="field-input" placeholder="备注 / 标签（如 #漫展 #预售定金）" autocomplete="off">
+        </div>
+
+        <button type="submit" class="btn-primary" id="btn-save">记一笔</button>
+      </form>
+
+      <!-- 今日流水 -->
+      <h2 class="section-title">最近记录</h2>
+      <div class="flow-list" id="recent-list"></div>
+    </section>
+
+    <!-- ═══ 视图：流水 ═══ -->
+    <section class="view" id="view-flow" data-view="flow" hidden>
+      <div class="filter-bar">
+        <select id="filter-account" class="field-select"></select>
+        <select id="filter-category" class="field-select"></select>
+        <select id="filter-type" class="field-select">
+          <option value="">全部类型</option>
+          <option value="expense">支出</option>
+          <option value="income">收入</option>
+          <option value="transfer">转账</option>
+        </select>
+      </div>
+      <div class="flow-total" id="flow-total"></div>
+      <div class="flow-list" id="flow-list"></div>
+    </section>
+
+    <!-- ═══ 视图：账户 ═══ -->
+    <section class="view" id="view-accounts" data-view="accounts" hidden>
+      <div class="net-worth-card">
+        <div class="net-label">总资产（折合人民币）</div>
+        <div class="net-value" id="net-worth">¥0.00</div>
+        <div class="net-sub" id="net-worth-sub"></div>
+      </div>
+      <h2 class="section-title">账户 <button class="btn-small" id="btn-add-account">＋ 添加</button></h2>
+      <div class="account-list" id="account-list"></div>
+    </section>
+
+    <!-- ═══ 视图：统计 ═══ -->
+    <section class="view" id="view-stats" data-view="stats" hidden>
+      <div class="stats-cards" id="stats-cards"></div>
+      <h2 class="section-title">本月支出构成</h2>
+      <div class="cat-bars" id="cat-bars"></div>
+      <h2 class="section-title">收支走势</h2>
+      <div class="trend-chart" id="trend-chart"></div>
+    </section>
+
+    <!-- ═══ 视图：设置 ═══ -->
+    <section class="view" id="view-settings" data-view="settings" hidden>
+      <h2 class="section-title">汇率</h2>
+      <div class="settings-card">
+        <label class="settings-label">汇率数据源</label>
+        <div class="settings-row">
+          <input type="text" id="fx-url" class="field-input" placeholder="https://...">
+          <button class="btn-small" id="btn-fetch-fx">更新汇率</button>
+        </div>
+        <div class="settings-sub" id="fx-status">未加载</div>
+      </div>
+
+      <h2 class="section-title">分类管理</h2>
+      <div class="settings-card">
+        <div class="cat-manage" id="cat-manage"></div>
+        <div class="settings-row">
+          <input type="text" id="new-cat-name" class="field-input" placeholder="新分类名称">
+          <select id="new-cat-type" class="field-select">
+            <option value="expense">支出分类</option>
+            <option value="income">收入分类</option>
+          </select>
+          <button class="btn-small" id="btn-add-cat">添加</button>
+        </div>
+      </div>
+
+      <h2 class="section-title">数据备份</h2>
+      <div class="settings-card">
+        <div class="settings-row">
+          <button class="btn-small" id="btn-export">导出 JSON 备份</button>
+          <button class="btn-small" id="btn-import">导入备份</button>
+          <input type="file" id="import-file" accept=".json" hidden>
+        </div>
+        <div class="settings-sub">数据保存在本浏览器。建议每周导出一次备份。</div>
+      </div>
+
+      <h2 class="section-title">关于</h2>
+      <div class="settings-card">
+        <div class="settings-sub">萌账 Moekan v1.0（M1 核心账本）<br>
+          汇率数据来自 fx-dashboard ｜ 纯本地存储，无云端上传</div>
+      </div>
+    </section>
+  </main>
+
+  <nav class="tab-bar" id="tab-bar">
+    <button class="tab active" data-view="home"><span class="tab-icon">✏️</span><span>记账</span></button>
+    <button class="tab" data-view="flow"><span class="tab-icon">📋</span><span>流水</span></button>
+    <button class="tab" data-view="accounts"><span class="tab-icon">💳</span><span>账户</span></button>
+    <button class="tab" data-view="stats"><span class="tab-icon">📊</span><span>统计</span></button>
+    <button class="tab" data-view="settings"><span class="tab-icon">⚙️</span><span>设置</span></button>
+  </nav>
+
+  <!-- 账户编辑弹层 -->
+  <div class="modal-mask" id="account-modal" hidden>
+    <div class="modal">
+      <h3 id="account-modal-title">添加账户</h3>
+      <div class="modal-body">
+        <label class="settings-label">名称</label>
+        <input type="text" id="acc-name" class="field-input" placeholder="如：现金 / 支付宝 / 招行卡 / JPY现金">
+        <label class="settings-label">类型</label>
+        <select id="acc-type" class="field-select">
+          <option value="asset">资产账户（现金/卡/钱包）</option>
+          <option value="virtual_asset">虚拟资产账户（谷子/游戏库）</option>
+          <option value="liability">负债账户（信用卡）</option>
+        </select>
+        <label class="settings-label">主币种</label>
+        <select id="acc-currency" class="field-select"></select>
+        <label class="settings-label">期初余额</label>
+        <input type="text" id="acc-init-balance" class="field-input" inputmode="decimal" placeholder="0.00">
+      </div>
+      <div class="modal-actions">
+        <button class="btn-small" id="acc-cancel">取消</button>
+        <button class="btn-small danger" id="acc-delete" hidden>删除</button>
+        <button class="btn-small primary" id="acc-save">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast" hidden></div>
+
+  <script src="js/store.js"></script>
+  <script src="js/fx.js"></script>
+  <script src="js/engine.js"></script>
+  <script src="js/views.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
