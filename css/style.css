@@ -17,6 +17,8 @@
   --shadow: 0 2px 10px rgba(45,42,40,.06);
 }
 * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+[hidden] { display: none !important; }
 html { font-size: 16px; }
 body {
   font-family: -apple-system, "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;

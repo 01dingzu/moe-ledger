@@ -1,5 +1,5 @@
 /* sw.js — 应用壳缓存；汇率请求走网络 */
-const CACHE = 'moekan-v1';
+const CACHE = 'moekan-v2';
 const SHELL = [
   './',
   './index.html',
